@@ -69,13 +69,6 @@ struct LauncherView: View {
                 .frame(height: 56)
 
                 Divider()
-                if timer.state.isActive {
-                    TimerStrip(
-                        state: timer.state, now: now,
-                        bar: Color(nsColor: settings.barColor), weight: Font.Weight(settings.pillFontWeight)
-                    )
-                    Divider()
-                }
                 results(rows, selected: selected)
                 Divider()
                 footer(selected)
@@ -183,70 +176,6 @@ private struct RowView: View {
                 .fill(Color.primary.opacity(isSelected ? 0.1 : 0))
         )
         .contentShape(Rectangle())
-    }
-}
-
-/// The running timer, shown above the list: the menu bar item at full size.
-/// Same outline, same bar behind the text in the colour and opacity chosen in
-/// Settings, draining the same way.
-private struct TimerStrip: View {
-    let state: TimerState
-    let now: Date
-    /// The bar colour, opacity included.
-    let bar: Color
-    /// The weight chosen for the time in the menu bar.
-    let weight: Font.Weight
-
-    var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
-        // Paused dims everything, as it does in the menu bar.
-        let strength: Double = state.isPaused ? 0.5 : 1
-
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(DurationFormat.menuBar(state.remaining(now: now) ?? 0, style: .precise))
-                .font(.system(size: 20, weight: weight))
-                .monospacedDigit()
-            Group {
-                Text(state.isPaused ? "paused" : "left")
-                if let label = state.label {
-                    Text("· \(label)")
-                        .lineLimit(1)
-                }
-                Spacer()
-                if let end = state.endDate {
-                    Text("ends \(end.formatted(date: .omitted, time: .shortened))")
-                        .monospacedDigit()
-                }
-            }
-            .opacity(0.7)
-        }
-        .font(.system(size: 13, weight: .medium))
-        .foregroundStyle(Color.primary.opacity(strength))
-        .padding(.horizontal, 14)
-        .frame(height: 44)
-        .background(alignment: .leading) {
-            GeometryReader { geometry in
-                Rectangle()
-                    .fill(bar.opacity(state.isPaused ? 0.6 : 1))
-                    .frame(width: geometry.size.width * state.fraction(now: now))
-            }
-        }
-        .clipShape(shape)
-        .overlay(shape.strokeBorder(Color.primary.opacity(0.9 * strength), lineWidth: 1.5))
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-    }
-}
-
-extension Font.Weight {
-    init(_ weight: PillFontWeight) {
-        switch weight {
-        case .light: self = .light
-        case .regular: self = .regular
-        case .medium: self = .medium
-        case .semibold: self = .semibold
-        case .bold: self = .bold
-        }
     }
 }
 
