@@ -23,6 +23,7 @@ final class TimerController: ObservableObject {
             .flatMap { try? JSONDecoder().decode(TimerState.self, from: $0) } ?? TimerState()
         // A timer that ran out while the app was closed comes back as finished.
         _ = restored.tick(now: Date())
+        _ = restored.expireFinished(now: Date())
         state = restored
 
         // Timers don't fire during sleep, so catch up the moment the Mac wakes.
@@ -59,6 +60,7 @@ final class TimerController: ObservableObject {
         let date = Date()
         var next = state
         let finished = next.tick(now: date)
+        _ = next.expireFinished(now: date)
         now = date
         if next != state {
             state = next
@@ -85,9 +87,10 @@ final class TimerController: ObservableObject {
             // when the displayed number changes.
             let remaining = end.timeIntervalSinceNow
             delay = max(0.02, remaining - remaining.rounded(.down) + 0.01)
-        case .finished(let at, _, _) where Date().timeIntervalSince(at) < PillContent.pulseDuration + 1:
-            delay = 1
-        case .idle, .paused, .finished:
+        case .finished(let at, _, _):
+            // Come back when the mark in the menu bar is due to clear.
+            delay = max(0.02, TimerState.finishedDisplay - Date().timeIntervalSince(at) + 0.01)
+        case .idle, .paused:
             break
         }
 

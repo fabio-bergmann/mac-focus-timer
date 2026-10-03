@@ -48,12 +48,17 @@ enum PillRenderer {
         let strength: CGFloat = content.dimmed ? 0.5 : 1
 
         guard let text = content.text else {
-            // Idle: the same outline, empty and square.
+            // No time to show: the same outline as a small square. Empty when
+            // idle, filled with the bar colour for a moment after a timer ends.
             return NSImage(size: NSSize(width: height, height: height), flipped: false) { rect in
                 let outline = NSBezierPath(
                     roundedRect: rect.insetBy(dx: 1.5, dy: 1.5),
                     xRadius: cornerRadius - 0.5, yRadius: cornerRadius - 0.5
                 )
+                if content.fraction > 0 {
+                    bar.setFill()
+                    outline.fill()
+                }
                 outline.lineWidth = lineWidth
                 foreground.withAlphaComponent(0.85).setStroke()
                 outline.stroke()
@@ -74,7 +79,7 @@ enum PillRenderer {
 
             NSGraphicsContext.saveGraphicsState()
             outline.addClip()
-            let alpha = min(1, bar.alphaComponent * (content.dimmed ? 0.6 : 1) + (content.highlighted ? 0.35 : 0))
+            let alpha = bar.alphaComponent * (content.dimmed ? 0.6 : 1)
             bar.withAlphaComponent(alpha).setFill()
             var fill = frame
             fill.size.width = frame.width * min(1, max(0, content.fraction))

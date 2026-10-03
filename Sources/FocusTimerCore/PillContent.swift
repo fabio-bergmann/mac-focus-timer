@@ -2,23 +2,18 @@ import Foundation
 
 /// What the menu bar item shows, before any drawing.
 public struct PillContent: Equatable {
-    /// How long a finished timer keeps blinking for attention.
-    public static let pulseDuration: TimeInterval = 10
-
-    /// Nil when idle: an empty rounded square.
+    /// The time, or nil for the small rounded square shown when nothing runs.
     public var text: String?
-    /// Share of the bar behind the text that is filled, 0...1.
+    /// Share of the item that is filled with the bar colour, 0...1. Behind a
+    /// time it is the time left; on the square it marks a timer that just ended.
     public var fraction: Double
     /// Paused.
     public var dimmed: Bool
-    /// The "on" beat of a finished timer's blink.
-    public var highlighted: Bool
 
-    public init(text: String?, fraction: Double = 0, dimmed: Bool = false, highlighted: Bool = false) {
+    public init(text: String?, fraction: Double = 0, dimmed: Bool = false) {
         self.text = text
         self.fraction = fraction
         self.dimmed = dimmed
-        self.highlighted = highlighted
     }
 
     public static func make(state: TimerState, now: Date, style: DisplayStyle) -> PillContent {
@@ -32,10 +27,9 @@ public struct PillContent: Equatable {
                 fraction: state.fraction(now: now),
                 dimmed: state.isPaused
             )
-        case .finished(let at, _, _):
-            let elapsed = now.timeIntervalSince(at)
-            let blinking = elapsed >= 0 && elapsed < pulseDuration
-            return PillContent(text: "Done", fraction: 1, highlighted: blinking && Int(elapsed) % 2 == 0)
+        case .finished:
+            // The idle square, filled in.
+            return PillContent(text: nil, fraction: 1)
         }
     }
 }

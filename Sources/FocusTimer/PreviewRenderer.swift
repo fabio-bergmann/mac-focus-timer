@@ -68,8 +68,7 @@ enum PreviewRenderer {
             PillContent(text: "24:59", fraction: 0.99),
             PillContent(text: "1:04:59", fraction: 0.6),
             PillContent(text: "12m", fraction: 0.48, dimmed: true),
-            PillContent(text: "Done", fraction: 1, highlighted: true),
-            PillContent(text: "Done", fraction: 1),
+            PillContent(text: nil, fraction: 1),
         ]
         let scale: CGFloat = 4
         let bandHeight: CGFloat = 32

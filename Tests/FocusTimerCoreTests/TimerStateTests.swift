@@ -113,10 +113,26 @@ final class FormatTests: XCTestCase {
 
         state.resume(now: start.addingTimeInterval(300))
         _ = state.tick(now: start.addingTimeInterval(1200))
-        let done = PillContent.make(state: state, now: start.addingTimeInterval(1200.5), style: .compact)
-        XCTAssertEqual(done, PillContent(text: "Done", fraction: 1, highlighted: true))
-        XCTAssertFalse(PillContent.make(state: state, now: start.addingTimeInterval(1201.5), style: .compact).highlighted)
-        XCTAssertFalse(PillContent.make(state: state, now: start.addingTimeInterval(1260), style: .compact).highlighted)
+        // Finished: the idle square, filled in, with no text.
+        let done = PillContent.make(state: state, now: start.addingTimeInterval(1201), style: .compact)
+        XCTAssertEqual(done, PillContent(text: nil, fraction: 1))
+    }
+
+    func testFinishedMarkClearsAfterFiveSeconds() {
+        let start = Date(timeIntervalSince1970: 1_800_000_000)
+        var state = TimerState()
+        state.start(seconds: 60, label: nil, now: start)
+        XCTAssertFalse(state.expireFinished(now: start.addingTimeInterval(30)))
+
+        // Noticed late, as after sleep: the five seconds count from then.
+        XCTAssertTrue(state.tick(now: start.addingTimeInterval(600)))
+        XCTAssertEqual(state.phase, .finished(at: start.addingTimeInterval(600), total: 60, label: nil))
+        XCTAssertFalse(state.expireFinished(now: start.addingTimeInterval(604.9)))
+        XCTAssertEqual(PillContent.make(state: state, now: start.addingTimeInterval(604.9), style: .compact).fraction, 1)
+
+        XCTAssertTrue(state.expireFinished(now: start.addingTimeInterval(605)))
+        XCTAssertEqual(state.phase, .idle)
+        XCTAssertEqual(PillContent.make(state: state, now: start.addingTimeInterval(605), style: .compact), PillContent(text: nil))
     }
 
     func testPillWidth() {

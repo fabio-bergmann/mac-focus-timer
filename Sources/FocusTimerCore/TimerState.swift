@@ -4,7 +4,7 @@ public enum TimerPhase: Equatable, Codable {
     case idle
     case running(end: Date, total: TimeInterval, label: String?)
     case paused(remaining: TimeInterval, total: TimeInterval, label: String?)
-    /// Ran out; stays here until someone looks at it.
+    /// Ran out a moment ago. Shown briefly, then back to idle.
     case finished(at: Date, total: TimeInterval, label: String?)
 
     public var isActive: Bool {
@@ -18,6 +18,9 @@ public enum TimerPhase: Equatable, Codable {
 /// The one timer the app runs. Time is always passed in, so the end is a wall
 /// clock date: sleep, relaunches and late ticks can't make it drift.
 public struct TimerState: Equatable, Codable {
+    /// How long the menu bar item marks a finished timer before it clears.
+    public static let finishedDisplay: TimeInterval = 5
+
     public private(set) var phase: TimerPhase = .idle
 
     public init() {}
@@ -99,10 +102,20 @@ public struct TimerState: Equatable, Codable {
     }
 
     /// Moves a running timer whose end has passed to `.finished`. Returns true
-    /// on that transition only.
+    /// on that transition only. The finish is dated from when it is noticed,
+    /// not from the end time, so a timer that ran out while the Mac slept is
+    /// still marked for a moment after it wakes.
     public mutating func tick(now: Date) -> Bool {
         guard case .running(let end, let total, let label) = phase, now >= end else { return false }
-        phase = .finished(at: end, total: total, label: label)
+        phase = .finished(at: now, total: total, label: label)
+        return true
+    }
+
+    /// Returns a finished timer to idle once it has been marked for long
+    /// enough. True when it did.
+    public mutating func expireFinished(now: Date) -> Bool {
+        guard case .finished(let at, _, _) = phase, now.timeIntervalSince(at) >= Self.finishedDisplay else { return false }
+        phase = .idle
         return true
     }
 }
