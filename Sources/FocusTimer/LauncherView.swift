@@ -15,10 +15,25 @@ struct PanelRootView: View {
             }
         }
         .frame(width: PanelController.size.width, height: PanelController.size.height)
+        .background(
+            RoundedRectangle(cornerRadius: PanelController.cornerRadius)
+                .fill(Color(nsColor: .panelTint))
+        )
         .overlay(
             RoundedRectangle(cornerRadius: PanelController.cornerRadius)
                 .strokeBorder(Color.primary.opacity(0.12))
         )
+    }
+}
+
+extension NSColor {
+    /// Laid over the blur so the glass reads as #F7F7F7 in light mode, where
+    /// the bare material turns grey over dark windows. Dark mode keeps the
+    /// material as it is.
+    static let panelTint = NSColor(name: nil) { appearance in
+        appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            ? .clear
+            : NSColor(srgbRed: 247 / 255, green: 247 / 255, blue: 247 / 255, alpha: 0.75)
     }
 }
 
