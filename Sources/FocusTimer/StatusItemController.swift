@@ -47,18 +47,6 @@ final class StatusItemController: NSObject {
         render()
     }
 
-    /// Where the item sits, in screen coordinates. Recent macOS draws the menu
-    /// bar in another process and leaves the item's own window with an empty
-    /// frame; since this is only asked for on a click, the pointer stands in.
-    var frameOnScreen: NSRect? {
-        if let frame = item.button?.window?.frame, frame.height > 0 { return frame }
-        let pointer = NSEvent.mouseLocation
-        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(pointer) }) else { return nil }
-        let menuBarBottom = min(screen.visibleFrame.maxY, screen.frame.maxY - 24)
-        guard pointer.y >= menuBarBottom else { return nil }
-        return NSRect(x: pointer.x - 12, y: menuBarBottom, width: 24, height: screen.frame.maxY - menuBarBottom)
-    }
-
     private func render() {
         guard let button = item.button else { return }
         var content = PillContent.make(state: timer.state, now: Date(), style: settings.displayStyle)

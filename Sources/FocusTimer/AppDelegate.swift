@@ -24,11 +24,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.panel = panel
 
         let statusItem = StatusItemController(settings: settings, timer: timer)
-        statusItem.onClick = { [weak statusItem] in panel.toggle(anchor: statusItem?.frameOnScreen) }
-        statusItem.onShowSettings = { [weak statusItem] in panel.show(anchor: statusItem?.frameOnScreen, settings: true) }
+        statusItem.onClick = { panel.toggle(fromMenuBar: true) }
+        statusItem.onShowSettings = { panel.show(settings: true) }
         self.statusItem = statusItem
 
-        hotKey.onPress = { panel.toggle(anchor: nil) }
+        hotKey.onPress = { panel.toggle() }
         // Recording a new shortcut has to release the current one first, or the
         // system swallows the keystroke before the recorder sees it.
         settings.$hotKey.combineLatest(settings.$isRecordingShortcut)

@@ -87,10 +87,10 @@ scripts/release-local.sh [ref]   # build a committed ref, install, relaunch
 - **The panel never activates the app.** It is a non-activating `NSPanel` that
   takes the keyboard, so the app in front stays in front. With no menu bar of
   its own, the panel routes ⌘C/⌘V/⌘, itself (`LauncherPanel`).
-- **The panel opens under the pointer, not under the item's frame.** With the
-  menu bar drawn out of process, the status item's own window reports an empty
-  frame, so `StatusItemController.frameOnScreen` falls back to where the click
-  happened.
+- **The panel always opens in the middle of the screen**, whether from the
+  shortcut or a click on the menu bar item. Fabio asked for that; it also
+  sidesteps the status item's window reporting an empty frame now that macOS
+  draws the menu bar out of process.
 - **The app icon is drawn in code** (`PreviewRenderer.drawIcon`) and rendered
   into the bundle at build time.
 

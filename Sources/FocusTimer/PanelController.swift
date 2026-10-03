@@ -80,22 +80,23 @@ final class PanelController: NSObject, NSWindowDelegate {
         model.dismiss = { [weak self] in self?.hide() }
     }
 
-    /// - Parameter anchor: the menu bar item's frame to open under, or nil to
-    ///   open in the middle of the screen like Spotlight.
-    func toggle(anchor: NSRect?) {
+    /// - Parameter fromMenuBar: the request is a click on the menu bar item.
+    func toggle(fromMenuBar: Bool = false) {
         if panel.isVisible {
             hide()
             return
         }
         // Clicking the menu bar item to close the panel can dismiss it on
         // mouse-down and then arrive here on mouse-up; don't reopen for that.
-        if anchor != nil, Date().timeIntervalSince(lastDismissal) < 0.4 { return }
-        show(anchor: anchor)
+        if fromMenuBar, Date().timeIntervalSince(lastDismissal) < 0.4 { return }
+        show()
     }
 
-    func show(anchor: NSRect?, settings: Bool = false) {
+    /// Opens in the same spot however it was asked for: the shortcut and a
+    /// click on the menu bar item both land in the middle of the screen.
+    func show(settings: Bool = false) {
         model.prepareForShow(mode: settings ? .settings : .launcher)
-        panel.setFrame(anchor.flatMap(frame(under:)) ?? centeredFrame(), display: true)
+        panel.setFrame(centeredFrame(), display: true)
         panel.makeKeyAndOrderFront(nil)
 
         if clickMonitor == nil {
@@ -118,14 +119,6 @@ final class PanelController: NSObject, NSWindowDelegate {
 
     func windowDidResignKey(_ notification: Notification) {
         hide()
-    }
-
-    private func frame(under item: NSRect) -> NSRect? {
-        // An item hidden by a menu bar manager reports a frame off every screen.
-        guard let screen = NSScreen.screens.first(where: { $0.frame.intersects(item) }) else { return nil }
-        let visible = screen.visibleFrame
-        let x = min(max(item.midX - Self.size.width / 2, visible.minX + 8), visible.maxX - Self.size.width - 8)
-        return NSRect(x: x, y: item.minY - 6 - Self.size.height, width: Self.size.width, height: Self.size.height)
     }
 
     private func centeredFrame() -> NSRect {
