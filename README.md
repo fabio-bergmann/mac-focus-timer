@@ -23,9 +23,10 @@ another timer replaces the current one.
 
 ## Settings
 
-⌘, in the panel. Presets (typed the same way as above), the bar's colour and
-opacity, compact (`25m`) or precise (`24:59`) time, the shortcut, the sound,
-open at login, and updates.
+⌘, in the panel. Presets (typed the same way as above), how the menu bar item
+looks (bar colour and opacity, font weight, a fixed or fitted width, compact
+`25m` or precise `24:59` time), the shortcut, what happens when a timer ends
+(a sound, a glow around the screen), open at login, and updates.
 
 ## Install and update
 

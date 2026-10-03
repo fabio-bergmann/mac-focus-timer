@@ -30,6 +30,8 @@ final class AppSettings: ObservableObject {
     @Published var pillWidthIsFixed: Bool { didSet { defaults.set(pillWidthIsFixed, forKey: Key.widthIsFixed) } }
     @Published var pillFixedWidth: Double { didSet { defaults.set(pillFixedWidth, forKey: Key.fixedWidth) } }
     @Published var soundEnabled: Bool { didSet { defaults.set(soundEnabled, forKey: Key.sound) } }
+    /// The glow around the screen when a timer ends.
+    @Published var glowEnabled: Bool { didSet { defaults.set(glowEnabled, forKey: Key.glow) } }
     @Published var hotKey: KeyCombo { didSet { defaults.set(try? JSONEncoder().encode(hotKey), forKey: Key.hotKey) } }
 
     /// True while Settings waits for a new shortcut.
@@ -48,6 +50,7 @@ final class AppSettings: ObservableObject {
         static let widthIsFixed = "pillWidthIsFixed"
         static let fixedWidth = "pillFixedWidth"
         static let sound = "soundEnabled"
+        static let glow = "glowEnabled"
         static let hotKey = "hotKey"
     }
 
@@ -61,6 +64,7 @@ final class AppSettings: ObservableObject {
         pillWidthIsFixed = defaults.object(forKey: Key.widthIsFixed) as? Bool ?? true
         pillFixedWidth = defaults.object(forKey: Key.fixedWidth) as? Double ?? PillWidth.defaultFixed
         soundEnabled = defaults.object(forKey: Key.sound) as? Bool ?? true
+        glowEnabled = defaults.object(forKey: Key.glow) as? Bool ?? true
         hotKey = defaults.data(forKey: Key.hotKey).flatMap { try? JSONDecoder().decode(KeyCombo.self, from: $0) } ?? AppVariant.defaultHotKey
     }
 

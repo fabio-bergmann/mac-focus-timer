@@ -16,6 +16,7 @@ enum PreviewRenderer {
         let settings = AppSettings(defaults: defaults)
 
         write(pillSheet(style: settings.pillStyle), to: directory.appendingPathComponent("menu-bar.png"))
+        write(screenGlow(color: settings.barColor.withAlphaComponent(1)), to: directory.appendingPathComponent("screen-glow.png"))
         var fitted = settings.pillStyle
         fitted.width = .automatic
         write(pillSheet(style: fitted), to: directory.appendingPathComponent("menu-bar-fitted.png"))
@@ -90,6 +91,21 @@ enum PreviewRenderer {
                     x += image.size.width + spacing
                 }
             }
+        }
+    }
+
+    // MARK: - Screen glow
+
+    /// The glow at full strength over a stand-in desktop, half light and half dark.
+    private static func screenGlow(color: NSColor) -> NSBitmapImageRep {
+        let size = NSSize(width: 1280, height: 800)
+        return bitmap(width: size.width, height: size.height, scale: 1) {
+            NSColor(white: 0.95, alpha: 1).setFill()
+            NSRect(origin: .zero, size: size).fill()
+            NSColor(white: 0.14, alpha: 1).setFill()
+            NSRect(x: size.width / 2, y: 0, width: size.width / 2, height: size.height).fill()
+            guard let context = NSGraphicsContext.current?.cgContext else { return }
+            ScreenGlow.layer(size: size, color: color).render(in: context)
         }
     }
 

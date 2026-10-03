@@ -278,6 +278,7 @@ struct SettingsView: View {
     private var generalSection: some View {
         section("General") {
             Toggle("Play a sound when the timer ends", isOn: $settings.soundEnabled)
+            Toggle("Glow around the screen when the timer ends", isOn: $settings.glowEnabled)
             Toggle("Open at login", isOn: Binding(
                 get: { launchAtLogin },
                 set: { enabled in

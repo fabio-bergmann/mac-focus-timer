@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let updates = UpdateService()
     private let notifier = Notifier()
     private let hotKey = HotKey()
+    private let glow = ScreenGlow()
     private var statusItem: StatusItemController?
     private var panel: PanelController?
     private var subscriptions = Set<AnyCancellable>()
@@ -43,6 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return }
             self.notifier.timerFinished(seconds: seconds, label: label)
             if self.settings.soundEnabled { NSSound(named: "Glass")?.play() }
+            if self.settings.glowEnabled { self.glow.play(color: self.settings.barColor.withAlphaComponent(1)) }
         }
     }
 
