@@ -24,6 +24,9 @@ enum PreviewRenderer {
             timer.stop()
 
             snapshot(model, dark: dark, to: directory.appendingPathComponent("panel-presets-\(suffix).png"))
+            if let onPage = panelOnPage(model, dark: dark) {
+                write(onPage, to: directory.appendingPathComponent("panel-on-page-\(suffix).png"))
+            }
             model.query = "1"
             snapshot(model, dark: dark, to: directory.appendingPathComponent("panel-typing-\(suffix).png"))
             model.query = ""
@@ -94,6 +97,10 @@ enum PreviewRenderer {
     }
 
     private static func snapshot<Content: View>(_ view: Content, size: NSSize, dark: Bool, to url: URL) {
+        if let rep = render(view, size: size, dark: dark) { write(rep, to: url) }
+    }
+
+    private static func render<Content: View>(_ view: Content, size: NSSize, dark: Bool) -> NSBitmapImageRep? {
         let root = view
             .frame(width: size.width, height: size.height)
             .background(Color(nsColor: .windowBackgroundColor))
@@ -108,9 +115,30 @@ enum PreviewRenderer {
         host.layoutSubtreeIfNeeded()
         RunLoop.main.run(until: Date().addingTimeInterval(0.3))
 
-        guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return }
+        guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return nil }
         host.cacheDisplay(in: host.bounds, to: rep)
-        write(rep, to: url)
+        return rep
+    }
+
+    /// The panel as it sits on screen: on a page, with its rim and its shadow.
+    /// An approximation: the blur can't be reproduced here, so the glass shows
+    /// as a flat fill, and the shadow is PanelShadow's Core Graphics stand-in
+    /// for the layers the real window uses.
+    private static func panelOnPage(_ model: LauncherModel, dark: Bool) -> NSBitmapImageRep? {
+        guard let panel = render(PanelRootView(model: model), size: PanelController.size, dark: dark) else { return nil }
+        let margin = PanelShadow.margin
+        let page = NSSize(width: PanelController.size.width + margin * 2, height: PanelController.size.height + margin * 2)
+        return bitmap(width: page.width, height: page.height, scale: 2) {
+            guard let context = NSGraphicsContext.current?.cgContext else { return }
+            (dark ? NSColor(white: 0.12, alpha: 1) : NSColor.white).setFill()
+            NSRect(origin: .zero, size: page).fill()
+            let frame = NSRect(origin: NSPoint(x: margin, y: margin), size: PanelController.size)
+            PanelShadow.draw(around: frame, cornerRadius: PanelController.cornerRadius, scale: 2, in: context)
+            NSBezierPath(
+                roundedRect: frame, xRadius: PanelController.cornerRadius, yRadius: PanelController.cornerRadius
+            ).addClip()
+            panel.draw(in: frame)
+        }
     }
 
     // MARK: - Icon

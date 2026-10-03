@@ -40,6 +40,7 @@ final class PanelController: NSObject, NSWindowDelegate {
     static let cornerRadius: CGFloat = 16
 
     private let panel: LauncherPanel
+    private let shadow: NSPanel
     private let model: LauncherModel
     private var clickMonitor: Any?
     private var lastDismissal = Date.distantPast
@@ -51,6 +52,7 @@ final class PanelController: NSObject, NSWindowDelegate {
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered, defer: true
         )
+        shadow = NSPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
         super.init()
 
         panel.isFloatingPanel = true
@@ -60,9 +62,21 @@ final class PanelController: NSObject, NSWindowDelegate {
         panel.isReleasedWhenClosed = false
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = true
+        // The shadow is PanelShadow's, in a click-through window underneath.
+        panel.hasShadow = false
         panel.animationBehavior = .none
         panel.delegate = self
+
+        shadow.level = panel.level
+        shadow.collectionBehavior = panel.collectionBehavior
+        shadow.hidesOnDeactivate = false
+        shadow.isReleasedWhenClosed = false
+        shadow.isOpaque = false
+        shadow.backgroundColor = .clear
+        shadow.hasShadow = false
+        shadow.ignoresMouseEvents = true
+        shadow.animationBehavior = .none
+        shadow.contentView = PanelShadowView()
 
         let backdrop = NSVisualEffectView(frame: NSRect(origin: .zero, size: Self.size))
         backdrop.material = .popover
@@ -96,8 +110,12 @@ final class PanelController: NSObject, NSWindowDelegate {
     /// click on the menu bar item both land in the middle of the screen.
     func show(settings: Bool = false) {
         model.prepareForShow(mode: settings ? .settings : .launcher)
-        panel.setFrame(centeredFrame(), display: true)
+        let frame = centeredFrame()
+        shadow.setFrame(frame.insetBy(dx: -PanelShadow.margin, dy: -PanelShadow.margin), display: true)
+        panel.setFrame(frame, display: true)
+        shadow.orderFront(nil)
         panel.makeKeyAndOrderFront(nil)
+        panel.addChildWindow(shadow, ordered: .below)
 
         if clickMonitor == nil {
             clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { [weak self] _ in
@@ -108,6 +126,8 @@ final class PanelController: NSObject, NSWindowDelegate {
 
     func hide() {
         guard panel.isVisible else { return }
+        panel.removeChildWindow(shadow)
+        shadow.orderOut(nil)
         panel.orderOut(nil)
         lastDismissal = Date()
         model.settings.isRecordingShortcut = false
@@ -132,7 +152,7 @@ final class PanelController: NSObject, NSWindowDelegate {
         )
     }
 
-    /// A stretchable mask, which rounds the blur and the window shadow together.
+    /// A stretchable mask, which rounds the corners of the blur.
     private static func roundedMask(radius: CGFloat) -> NSImage {
         let edge = radius * 2 + 1
         let image = NSImage(size: NSSize(width: edge, height: edge), flipped: false) { rect in

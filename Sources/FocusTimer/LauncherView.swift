@@ -4,6 +4,7 @@ import SwiftUI
 
 struct PanelRootView: View {
     @ObservedObject var model: LauncherModel
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Group {
@@ -20,8 +21,10 @@ struct PanelRootView: View {
                 .fill(Color(nsColor: .panelTint))
         )
         .overlay(
+            // A light rim, like the edge of a sheet of glass. A dark hairline
+            // here reads as a black border around a panel this pale.
             RoundedRectangle(cornerRadius: PanelController.cornerRadius)
-                .strokeBorder(Color.primary.opacity(0.12))
+                .strokeBorder(Color.white.opacity(colorScheme == .dark ? 0.14 : 0.6))
         )
     }
 }
