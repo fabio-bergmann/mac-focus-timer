@@ -119,6 +119,17 @@ final class FormatTests: XCTestCase {
         XCTAssertFalse(PillContent.make(state: state, now: start.addingTimeInterval(1260), style: .compact).highlighted)
     }
 
+    func testPillWidth() {
+        // Fitted: the text plus room either side, never narrower than 30.
+        XCTAssertEqual(PillWidth.automatic.width(forText: 25.2), 50)
+        XCTAssertEqual(PillWidth.automatic.width(forText: 3), 30)
+        // Fixed: the chosen width, until the time would not fit.
+        XCTAssertEqual(PillWidth.fixed(56).width(forText: 25.2), 56)
+        XCTAssertEqual(PillWidth.fixed(56).width(forText: 48), 56)
+        XCTAssertEqual(PillWidth.fixed(56).width(forText: 51.4), 60)
+        XCTAssertEqual(PillWidth.defaultFixed, 56)
+    }
+
     func testHexColours() {
         XCTAssertEqual(RGB(hex: "#A855F7")?.hex, "#A855F7")
         XCTAssertEqual(RGB(hex: "a855f7")?.hex, "#A855F7")

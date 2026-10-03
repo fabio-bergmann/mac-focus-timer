@@ -25,6 +25,10 @@ final class AppSettings: ObservableObject {
     @Published var barColorHex: String { didSet { defaults.set(barColorHex, forKey: Key.barColor) } }
     @Published var barOpacity: Double { didSet { defaults.set(barOpacity, forKey: Key.barOpacity) } }
     @Published var displayStyle: DisplayStyle { didSet { defaults.set(displayStyle.rawValue, forKey: Key.displayStyle) } }
+    @Published var pillFontWeight: PillFontWeight { didSet { defaults.set(pillFontWeight.rawValue, forKey: Key.fontWeight) } }
+    /// Off lets the menu bar item grow and shrink with the time it shows.
+    @Published var pillWidthIsFixed: Bool { didSet { defaults.set(pillWidthIsFixed, forKey: Key.widthIsFixed) } }
+    @Published var pillFixedWidth: Double { didSet { defaults.set(pillFixedWidth, forKey: Key.fixedWidth) } }
     @Published var soundEnabled: Bool { didSet { defaults.set(soundEnabled, forKey: Key.sound) } }
     @Published var hotKey: KeyCombo { didSet { defaults.set(try? JSONEncoder().encode(hotKey), forKey: Key.hotKey) } }
 
@@ -40,6 +44,9 @@ final class AppSettings: ObservableObject {
         static let barColor = "barColor"
         static let barOpacity = "barOpacity"
         static let displayStyle = "displayStyle"
+        static let fontWeight = "pillFontWeight"
+        static let widthIsFixed = "pillWidthIsFixed"
+        static let fixedWidth = "pillFixedWidth"
         static let sound = "soundEnabled"
         static let hotKey = "hotKey"
     }
@@ -50,6 +57,9 @@ final class AppSettings: ObservableObject {
         barColorHex = defaults.string(forKey: Key.barColor) ?? Self.defaultBarColorHex
         barOpacity = defaults.object(forKey: Key.barOpacity) as? Double ?? 0.55
         displayStyle = defaults.string(forKey: Key.displayStyle).flatMap(DisplayStyle.init) ?? .compact
+        pillFontWeight = defaults.string(forKey: Key.fontWeight).flatMap(PillFontWeight.init) ?? .semibold
+        pillWidthIsFixed = defaults.object(forKey: Key.widthIsFixed) as? Bool ?? true
+        pillFixedWidth = defaults.object(forKey: Key.fixedWidth) as? Double ?? PillWidth.defaultFixed
         soundEnabled = defaults.object(forKey: Key.sound) as? Bool ?? true
         hotKey = defaults.data(forKey: Key.hotKey).flatMap { try? JSONDecoder().decode(KeyCombo.self, from: $0) } ?? AppVariant.defaultHotKey
     }
@@ -57,6 +67,14 @@ final class AppSettings: ObservableObject {
     /// The bar behind the time, with its transparency.
     var barColor: NSColor {
         NSColor(hex: barColorHex, alpha: barOpacity) ?? NSColor(hex: Self.defaultBarColorHex, alpha: barOpacity)!
+    }
+
+    /// Everything about the menu bar item's look that is set here.
+    var pillStyle: PillStyle {
+        PillStyle(
+            bar: barColor, weight: pillFontWeight,
+            width: pillWidthIsFixed ? .fixed(pillFixedWidth) : .automatic
+        )
     }
 }
 

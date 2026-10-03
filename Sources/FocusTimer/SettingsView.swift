@@ -146,7 +146,7 @@ struct SettingsView: View {
             HStack(spacing: 14) {
                 // A stand-in for the menu bar, dark and light.
                 ForEach([true, false], id: \.self) { dark in
-                    Image(nsImage: PillRenderer.image(for: sample, bar: settings.barColor, darkMenuBar: dark))
+                    Image(nsImage: PillRenderer.image(for: sample, style: settings.pillStyle, darkMenuBar: dark))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 7)
                         .background(
@@ -186,6 +186,47 @@ struct SettingsView: View {
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
                     .frame(width: 40, alignment: .trailing)
+            }
+
+            HStack(spacing: 8) {
+                Text("Weight")
+                    .frame(width: 80, alignment: .leading)
+                Picker("Weight", selection: $settings.pillFontWeight) {
+                    ForEach(PillFontWeight.allCases, id: \.self) { weight in
+                        Text(weight.title).tag(weight)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+            }
+
+            HStack(spacing: 8) {
+                Text("Width")
+                    .frame(width: 80, alignment: .leading)
+                Picker("Width", selection: $settings.pillWidthIsFixed) {
+                    Text("Fixed").tag(true)
+                    Text("Fits the time").tag(false)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 200)
+                if settings.pillWidthIsFixed {
+                    // Whole pixels, without the tick marks a stepped slider draws.
+                    Slider(value: Binding(
+                        get: { settings.pillFixedWidth },
+                        set: { settings.pillFixedWidth = $0.rounded() }
+                    ), in: PillWidth.fixedRange)
+                    Text("\(Int(settings.pillFixedWidth)) px")
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                        .frame(width: 48, alignment: .trailing)
+                    Stepper("Width", value: $settings.pillFixedWidth, in: PillWidth.fixedRange, step: 1)
+                        .labelsHidden()
+                } else {
+                    Text("Grows and shrinks with the time shown.")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
             }
         }
         .font(.system(size: 13))

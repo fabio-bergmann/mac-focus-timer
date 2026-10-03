@@ -18,7 +18,7 @@ final class StatusItemController: NSObject {
     /// Everything the image depends on, to skip redraws that change nothing.
     private struct Drawn: Equatable {
         var content: PillContent
-        var bar: NSColor
+        var style: PillStyle
         var dark: Bool
     }
 
@@ -53,11 +53,11 @@ final class StatusItemController: NSObject {
         // Whole-pixel steps are all the bar can show.
         content.fraction = (content.fraction * 200).rounded() / 200
         let dark = button.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-        let next = Drawn(content: content, bar: settings.barColor, dark: dark)
+        let next = Drawn(content: content, style: settings.pillStyle, dark: dark)
         guard next != drawn else { return }
         drawn = next
 
-        button.image = PillRenderer.image(for: content, bar: next.bar, darkMenuBar: dark, devMarker: AppVariant.isDev)
+        button.image = PillRenderer.image(for: content, style: next.style, darkMenuBar: dark, devMarker: AppVariant.isDev)
         let description = accessibilityDescription
         button.toolTip = description
         button.setAccessibilityTitle(description)

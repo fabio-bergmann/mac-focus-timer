@@ -70,7 +70,10 @@ struct LauncherView: View {
 
                 Divider()
                 if timer.state.isActive {
-                    TimerStrip(state: timer.state, now: now, bar: Color(nsColor: settings.barColor))
+                    TimerStrip(
+                        state: timer.state, now: now,
+                        bar: Color(nsColor: settings.barColor), weight: Font.Weight(settings.pillFontWeight)
+                    )
                     Divider()
                 }
                 results(rows, selected: selected)
@@ -191,6 +194,8 @@ private struct TimerStrip: View {
     let now: Date
     /// The bar colour, opacity included.
     let bar: Color
+    /// The weight chosen for the time in the menu bar.
+    let weight: Font.Weight
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -199,7 +204,7 @@ private struct TimerStrip: View {
 
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(DurationFormat.menuBar(state.remaining(now: now) ?? 0, style: .precise))
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: 20, weight: weight))
                 .monospacedDigit()
             Group {
                 Text(state.isPaused ? "paused" : "left")
@@ -230,6 +235,18 @@ private struct TimerStrip: View {
         .overlay(shape.strokeBorder(Color.primary.opacity(0.9 * strength), lineWidth: 1.5))
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+    }
+}
+
+extension Font.Weight {
+    init(_ weight: PillFontWeight) {
+        switch weight {
+        case .light: self = .light
+        case .regular: self = .regular
+        case .medium: self = .medium
+        case .semibold: self = .semibold
+        case .bold: self = .bold
+        }
     }
 }
 

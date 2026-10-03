@@ -1,6 +1,26 @@
 import AppKit
 import FocusTimerCore
 
+/// How the menu bar item is set to look.
+struct PillStyle: Equatable {
+    /// The bar colour, alpha included.
+    var bar: NSColor
+    var weight: PillFontWeight = .semibold
+    var width: PillWidth = .fixed(PillWidth.defaultFixed)
+}
+
+extension PillFontWeight {
+    var fontWeight: NSFont.Weight {
+        switch self {
+        case .light: .light
+        case .regular: .regular
+        case .medium: .medium
+        case .semibold: .semibold
+        case .bold: .bold
+        }
+    }
+}
+
 /// Draws the menu bar item: the time centred in a rounded rectangle with a
 /// white outline, and a translucent bar behind it that drains as time runs out.
 enum PillRenderer {
@@ -8,12 +28,11 @@ enum PillRenderer {
     private static let cornerRadius: CGFloat = 5
     private static let lineWidth: CGFloat = 1.25
 
-    /// - Parameter bar: the bar colour, alpha included.
     /// - Parameter darkMenuBar: whether the menu bar wants light content.
     /// - Parameter devMarker: adds an orange dot, so the dev build can be told
     ///   from the installed one sitting next to it.
-    static func image(for content: PillContent, bar: NSColor, darkMenuBar: Bool, devMarker: Bool = false) -> NSImage {
-        let pill = pill(for: content, bar: bar, darkMenuBar: darkMenuBar)
+    static func image(for content: PillContent, style: PillStyle, darkMenuBar: Bool, devMarker: Bool = false) -> NSImage {
+        let pill = pill(for: content, style: style, darkMenuBar: darkMenuBar)
         guard devMarker else { return pill }
         return NSImage(size: pill.size, flipped: false) { rect in
             pill.draw(in: rect)
@@ -23,7 +42,8 @@ enum PillRenderer {
         }
     }
 
-    private static func pill(for content: PillContent, bar: NSColor, darkMenuBar: Bool) -> NSImage {
+    private static func pill(for content: PillContent, style: PillStyle, darkMenuBar: Bool) -> NSImage {
+        let bar = style.bar
         let foreground: NSColor = darkMenuBar ? .white : NSColor(white: 0, alpha: 0.85)
         let strength: CGFloat = content.dimmed ? 0.5 : 1
 
@@ -42,11 +62,11 @@ enum PillRenderer {
         }
 
         let label = NSAttributedString(string: text, attributes: [
-            .font: NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .semibold),
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 12, weight: style.weight.fontWeight),
             .foregroundColor: foreground.withAlphaComponent(strength),
         ])
         let textSize = label.size()
-        let size = NSSize(width: max(30, ceil(textSize.width) + 14), height: height)
+        let size = NSSize(width: style.width.width(forText: textSize.width), height: height)
 
         return NSImage(size: size, flipped: false) { rect in
             let frame = rect.insetBy(dx: lineWidth / 2, dy: lineWidth / 2)

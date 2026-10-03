@@ -15,7 +15,10 @@ enum PreviewRenderer {
         let defaults = UserDefaults(suiteName: suite) ?? .standard
         let settings = AppSettings(defaults: defaults)
 
-        write(pillSheet(bar: settings.barColor), to: directory.appendingPathComponent("menu-bar.png"))
+        write(pillSheet(style: settings.pillStyle), to: directory.appendingPathComponent("menu-bar.png"))
+        var fitted = settings.pillStyle
+        fitted.width = .automatic
+        write(pillSheet(style: fitted), to: directory.appendingPathComponent("menu-bar-fitted.png"))
 
         for dark in [true, false] {
             let suffix = dark ? "dark" : "light"
@@ -53,7 +56,7 @@ enum PreviewRenderer {
 
     // MARK: - Menu bar
 
-    private static func pillSheet(bar: NSColor) -> NSBitmapImageRep {
+    private static func pillSheet(style: PillStyle) -> NSBitmapImageRep {
         let samples = [
             PillContent(text: nil),
             PillContent(text: "25m", fraction: 1),
@@ -70,7 +73,7 @@ enum PreviewRenderer {
         let scale: CGFloat = 4
         let bandHeight: CGFloat = 32
         let spacing: CGFloat = 16
-        let images = { (dark: Bool) in samples.map { PillRenderer.image(for: $0, bar: bar, darkMenuBar: dark) } }
+        let images = { (dark: Bool) in samples.map { PillRenderer.image(for: $0, style: style, darkMenuBar: dark) } }
         let width = images(true).reduce(spacing) { $0 + $1.size.width + spacing }
 
         return bitmap(width: width, height: bandHeight * 2, scale: scale) {

@@ -40,6 +40,34 @@ public struct PillContent: Equatable {
     }
 }
 
+/// How heavy the time is drawn in the menu bar.
+public enum PillFontWeight: String, Codable, CaseIterable, Sendable {
+    case light, regular, medium, semibold, bold
+
+    public var title: String { rawValue.capitalized }
+}
+
+/// How wide the menu bar item is while it shows a time.
+public enum PillWidth: Equatable, Sendable {
+    /// As wide as the time needs, so it changes as the timer counts down.
+    case automatic
+    /// The same width whatever the time, so the menu bar stays still.
+    case fixed(Double)
+
+    public static let defaultFixed = 56.0
+    public static let fixedRange = 30.0...120.0
+
+    /// The item's width for a time that measures `textWidth`. A fixed width
+    /// gives way only when the time wouldn't fit inside it.
+    public func width(forText textWidth: Double) -> Double {
+        let text = textWidth.rounded(.up)
+        switch self {
+        case .automatic: return max(30, text + 24)
+        case .fixed(let width): return max(width, text + 8)
+        }
+    }
+}
+
 /// An sRGB colour read from "#RRGGBB" (or "#RGB").
 public struct RGB: Equatable {
     public var red: Double
