@@ -91,6 +91,11 @@ scripts/release-local.sh [ref]   # build a committed ref, install, relaunch
   shortcut or a click on the menu bar item. Fabio asked for that; it also
   sidesteps the status item's window reporting an empty frame now that macOS
   draws the menu bar out of process.
+- **Icons are Hugeicons Pro, stroke rounded**, the set CoWork uses. The package
+  is JavaScript, so the path data of each icon is copied into
+  `FocusTimerCore/Icon.swift` and drawn by `IconView`; that file says how to add
+  one. Don't reach for SF Symbols. The icons are licensed, so the repo stays
+  private.
 - **The app icon is drawn in code** (`PreviewRenderer.drawIcon`) and rendered
   into the bundle at build time.
 

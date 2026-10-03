@@ -10,14 +10,13 @@ public enum LauncherAction: Equatable {
 
 public struct LauncherRow: Equatable, Identifiable {
     public let id: String
-    /// SF Symbol name.
-    public let icon: String
+    public let icon: Icon
     public let title: String
     public var subtitle: String?
     public var trailing: String?
     public let action: LauncherAction
 
-    public init(id: String, icon: String, title: String, subtitle: String? = nil, trailing: String? = nil, action: LauncherAction) {
+    public init(id: String, icon: Icon, title: String, subtitle: String? = nil, trailing: String? = nil, action: LauncherAction) {
         self.id = id
         self.icon = icon
         self.title = title
@@ -41,7 +40,7 @@ public enum Launcher {
         var text = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let commands = commands(for: phase, clock: clock)
 
-        func startRow(id: String, icon: String, _ timer: ParsedTimer) -> LauncherRow {
+        func startRow(id: String, icon: Icon, _ timer: ParsedTimer) -> LauncherRow {
             let length = DurationFormat.spoken(timer.seconds)
             let action = LauncherAction.start(seconds: timer.seconds, label: timer.label)
             if let end = timer.endsAt {
@@ -54,7 +53,7 @@ public enum Launcher {
 
         let presetRows = presets.enumerated().compactMap { index, raw -> (row: LauncherRow, timer: ParsedTimer, keys: [String])? in
             guard let timer = DurationParser.parse(raw, now: now, calendar: calendar) else { return nil }
-            return (startRow(id: "preset.\(index)", icon: "timer", timer), timer, searchKeys(raw: raw, timer: timer))
+            return (startRow(id: "preset.\(index)", icon: .timer, timer), timer, searchKeys(raw: raw, timer: timer))
         }
 
         guard !text.isEmpty else { return commands.map(\.row) + presetRows.map(\.row) }
@@ -77,14 +76,14 @@ public enum Launcher {
                 trailing = "ends \(clock(end.addingTimeInterval(TimeInterval(typed.seconds))))"
             }
             return [LauncherRow(
-                id: "typed", icon: "plus", title: "Add \(DurationFormat.spoken(typed.seconds))",
+                id: "typed", icon: .plus, title: "Add \(DurationFormat.spoken(typed.seconds))",
                 trailing: trailing, action: .add(seconds: typed.seconds)
             )]
         }
 
         var rows: [LauncherRow] = []
         if let typed {
-            var row = startRow(id: "typed", icon: "play.fill", typed)
+            var row = startRow(id: "typed", icon: .play, typed)
             if phase.isActive, typed.label == nil, typed.endsAt == nil { row.subtitle = "Replaces the running timer" }
             rows.append(row)
         }
@@ -103,19 +102,19 @@ public enum Launcher {
     }
 
     private static func commands(for phase: TimerPhase, clock: (Date) -> String) -> [(row: LauncherRow, keywords: [String])] {
-        let stop = (LauncherRow(id: "stop", icon: "stop.fill", title: "Stop timer", action: .stop), ["stop", "cancel", "end", "clear"])
+        let stop = (LauncherRow(id: "stop", icon: .stop, title: "Stop timer", action: .stop), ["stop", "cancel", "end", "clear"])
         let addKeywords = ["add", "extend"]
         switch phase {
         case .running(let end, _, _):
             return [
-                (LauncherRow(id: "pause", icon: "pause.fill", title: "Pause timer", action: .pause), ["pause", "hold"]),
-                (LauncherRow(id: "add", icon: "plus", title: "Add 5 min", trailing: "ends \(clock(end.addingTimeInterval(300)))", action: .add(seconds: 300)), addKeywords),
+                (LauncherRow(id: "pause", icon: .pause, title: "Pause timer", action: .pause), ["pause", "hold"]),
+                (LauncherRow(id: "add", icon: .plus, title: "Add 5 min", trailing: "ends \(clock(end.addingTimeInterval(300)))", action: .add(seconds: 300)), addKeywords),
                 stop,
             ]
         case .paused:
             return [
-                (LauncherRow(id: "resume", icon: "play.fill", title: "Resume timer", action: .resume), ["resume", "continue", "play"]),
-                (LauncherRow(id: "add", icon: "plus", title: "Add 5 min", action: .add(seconds: 300)), addKeywords),
+                (LauncherRow(id: "resume", icon: .play, title: "Resume timer", action: .resume), ["resume", "continue", "play"]),
+                (LauncherRow(id: "add", icon: .plus, title: "Add 5 min", action: .add(seconds: 300)), addKeywords),
                 stop,
             ]
         case .idle, .finished:

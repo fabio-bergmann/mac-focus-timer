@@ -51,8 +51,7 @@ struct LauncherView: View {
 
             VStack(spacing: 0) {
                 HStack(spacing: 12) {
-                    Image(systemName: "timer")
-                        .font(.system(size: 18, weight: .medium))
+                    IconView(.timer, size: 22)
                         .foregroundStyle(.secondary)
                     QueryField(
                         text: $model.query,
@@ -116,7 +115,7 @@ struct LauncherView: View {
         HStack(spacing: 8) {
             Button(action: model.toggleSettings) {
                 HStack(spacing: 6) {
-                    Image(systemName: "gearshape")
+                    IconView(.settings, size: 15)
                     Text("Settings")
                     KeyCap("⌘,")
                 }
@@ -152,8 +151,7 @@ private struct RowView: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: row.icon)
-                .font(.system(size: 13, weight: .medium))
+            IconView(row.icon, size: 18)
                 .foregroundStyle(.secondary)
                 .frame(width: 22)
             Text(row.title)

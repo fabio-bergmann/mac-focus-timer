@@ -21,7 +21,7 @@ struct SettingsView: View {
                 HStack {
                     Button(action: model.showLauncher) {
                         HStack(spacing: 4) {
-                            Image(systemName: "chevron.left")
+                            IconView(.chevronLeft, size: 14)
                             Text("Timers")
                         }
                         .contentShape(Rectangle())
@@ -75,11 +75,11 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                     Spacer()
-                    iconButton("chevron.up", help: "Move up") { movePreset(index, by: -1) }
+                    iconButton(.chevronUp, help: "Move up") { movePreset(index, by: -1) }
                         .disabled(index == 0)
-                    iconButton("chevron.down", help: "Move down") { movePreset(index, by: 1) }
+                    iconButton(.chevronDown, help: "Move down") { movePreset(index, by: 1) }
                         .disabled(index == settings.presets.count - 1)
-                    iconButton("xmark", help: "Remove") { removePreset(index) }
+                    iconButton(.cancel, help: "Remove") { removePreset(index) }
                 }
             }
             HStack(spacing: 8) {
@@ -128,10 +128,9 @@ struct SettingsView: View {
         newPreset = ""
     }
 
-    private func iconButton(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {
+    private func iconButton(_ icon: Icon, help: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: 10, weight: .semibold))
+            IconView(icon, size: 14)
                 .frame(width: 20, height: 20)
                 .contentShape(Rectangle())
         }
