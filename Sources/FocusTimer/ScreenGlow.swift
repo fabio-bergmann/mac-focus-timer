@@ -1,10 +1,16 @@
 import AppKit
 
-/// The flourish when a timer ends: a glow in the bar's colour that rises around
-/// the edges of every screen, breathes twice and fades. It sits above
-/// everything, menu bar included, and takes neither clicks nor focus.
+extension NSColor {
+    /// "Done" is green whatever colour the bar is set to: the glow around the
+    /// screen and the filled square in the menu bar both use it.
+    static let timerFinished = NSColor(srgbRed: 34 / 255, green: 197 / 255, blue: 94 / 255, alpha: 1)
+}
+
+/// The flourish when a timer ends: a green glow that rises around the edges of
+/// every screen once and fades. It sits above everything, menu bar included,
+/// and takes neither clicks nor focus.
 final class ScreenGlow {
-    static let duration: TimeInterval = 4
+    static let duration: TimeInterval = 3
 
     /// How far in from the edge the glow reaches, as a share of the screen's
     /// shorter side.
@@ -17,7 +23,7 @@ final class ScreenGlow {
     private var windows: [NSWindow] = []
     private var run = 0
 
-    func play(color: NSColor) {
+    func play() {
         stop()
         run += 1
         let current = run
@@ -37,7 +43,7 @@ final class ScreenGlow {
             window.isReleasedWhenClosed = false
             window.animationBehavior = .none
 
-            let layer = Self.layer(size: screen.frame.size, color: color)
+            let layer = Self.layer(size: screen.frame.size)
             // Invisible once the animation has run its course.
             layer.opacity = 0
             let view = NSView(frame: NSRect(origin: .zero, size: screen.frame.size))
@@ -63,7 +69,8 @@ final class ScreenGlow {
 
     /// Four gradients, one along each edge. Where two meet in a corner they
     /// add up, which rounds the glow off there.
-    static func layer(size: CGSize, color: NSColor) -> CALayer {
+    static func layer(size: CGSize) -> CALayer {
+        let color = NSColor.timerFinished
         let root = CALayer()
         root.frame = CGRect(origin: .zero, size: size)
         let depth = min(size.width, size.height) * reach
@@ -87,15 +94,10 @@ final class ScreenGlow {
     }
 
     private static var animation: CAAnimation {
+        // One pulse: up quickly, a short hold, then a slower fade.
         let animation = CAKeyframeAnimation(keyPath: "opacity")
-        if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
-            // Reduce Motion: in and out, without the breathing.
-            animation.values = [0, 1, 1, 0]
-            animation.keyTimes = [0, 0.15, 0.75, 1]
-        } else {
-            animation.values = [0, 1, 0.55, 1, 0.55, 0]
-            animation.keyTimes = [0, 0.1, 0.35, 0.6, 0.8, 1]
-        }
+        animation.values = [0, 1, 1, 0]
+        animation.keyTimes = [0, 0.15, 0.45, 1]
         animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
         animation.duration = duration
         return animation

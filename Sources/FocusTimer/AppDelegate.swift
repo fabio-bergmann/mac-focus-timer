@@ -44,7 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return }
             self.notifier.timerFinished(seconds: seconds, label: label)
             if self.settings.soundEnabled { NSSound(named: "Glass")?.play() }
-            if self.settings.glowEnabled { self.glow.play(color: self.settings.barColor.withAlphaComponent(1)) }
+            if self.settings.glowEnabled { self.glow.play() }
         }
     }
 

@@ -49,14 +49,15 @@ enum PillRenderer {
 
         guard let text = content.text else {
             // No time to show: the same outline as a small square. Empty when
-            // idle, filled with the bar colour for a moment after a timer ends.
+            // idle, filled green (at the bar's opacity) for a moment after a
+            // timer ends.
             return NSImage(size: NSSize(width: height, height: height), flipped: false) { rect in
                 let outline = NSBezierPath(
                     roundedRect: rect.insetBy(dx: 1.5, dy: 1.5),
                     xRadius: cornerRadius - 0.5, yRadius: cornerRadius - 0.5
                 )
                 if content.fraction > 0 {
-                    bar.setFill()
+                    NSColor.timerFinished.withAlphaComponent(bar.alphaComponent).setFill()
                     outline.fill()
                 }
                 outline.lineWidth = lineWidth
