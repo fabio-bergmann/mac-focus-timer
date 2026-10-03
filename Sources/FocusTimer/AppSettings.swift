@@ -13,7 +13,7 @@ enum AppVariant {
 }
 
 final class AppSettings: ObservableObject {
-    static let defaultPresets = ["5m", "15m", "25m", "30m", "45m", "1h", "1h 30m", "2h"]
+    static let defaultPresets = ["5m", "15m", "30m", "45m", "1h", "1h 30m"]
     static let defaultBarColorHex = "#A855F7"
     static let palette = [
         "#A855F7", "#6366F1", "#3B82F6", "#14B8A6", "#22C55E",
