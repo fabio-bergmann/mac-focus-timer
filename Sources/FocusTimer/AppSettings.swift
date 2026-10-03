@@ -60,7 +60,7 @@ final class AppSettings: ObservableObject {
         barColorHex = defaults.string(forKey: Key.barColor) ?? Self.defaultBarColorHex
         barOpacity = defaults.object(forKey: Key.barOpacity) as? Double ?? 0.55
         displayStyle = defaults.string(forKey: Key.displayStyle).flatMap(DisplayStyle.init) ?? .compact
-        pillFontWeight = defaults.string(forKey: Key.fontWeight).flatMap(PillFontWeight.init) ?? .semibold
+        pillFontWeight = defaults.string(forKey: Key.fontWeight).flatMap(PillFontWeight.init) ?? .regular
         pillWidthIsFixed = defaults.object(forKey: Key.widthIsFixed) as? Bool ?? true
         pillFixedWidth = defaults.object(forKey: Key.fixedWidth) as? Double ?? PillWidth.defaultFixed
         soundEnabled = defaults.object(forKey: Key.sound) as? Bool ?? true

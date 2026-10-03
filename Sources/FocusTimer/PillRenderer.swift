@@ -5,7 +5,7 @@ import FocusTimerCore
 struct PillStyle: Equatable {
     /// The bar colour, alpha included.
     var bar: NSColor
-    var weight: PillFontWeight = .semibold
+    var weight: PillFontWeight = .regular
     var width: PillWidth = .fixed(PillWidth.defaultFixed)
 }
 
