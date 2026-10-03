@@ -36,6 +36,12 @@ terminal tab: it builds the working tree, uncommitted edits included, as
   menu bar item. It never touches the installed app (`AppVariant` in
   `AppSettings.swift` is where the two differ).
 - A running timer survives the relaunch, because it is stored on disk.
+- The script starts the app with `open`, not by running the binary. On this
+  macOS the menu bar is drawn by a system process, and a copy started straight
+  from a shell never got an item there (so `swift run FocusTimer` shows
+  nothing either). Anything the app prints comes back through `build/dev.log`.
+- Fabio's Bartender files every new menu bar item under Hidden. A build with a
+  new bundle id has to be dragged to Shown there once before it is visible.
 
 ## Commands
 
@@ -81,6 +87,10 @@ scripts/release-local.sh [ref]   # build a committed ref, install, relaunch
 - **The panel never activates the app.** It is a non-activating `NSPanel` that
   takes the keyboard, so the app in front stays in front. With no menu bar of
   its own, the panel routes ⌘C/⌘V/⌘, itself (`LauncherPanel`).
+- **The panel opens under the pointer, not under the item's frame.** With the
+  menu bar drawn out of process, the status item's own window reports an empty
+  frame, so `StatusItemController.frameOnScreen` falls back to where the click
+  happened.
 - **The app icon is drawn in code** (`PreviewRenderer.drawIcon`) and rendered
   into the bundle at build time.
 

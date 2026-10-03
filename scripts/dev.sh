@@ -12,17 +12,27 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APP="$ROOT/build/Focus Timer Dev.app"
 BIN="$APP/Contents/MacOS/FocusTimer"
-LOG="$(mktemp -t focus-timer-dev)"
-PID=""
+BUILD_LOG="$(mktemp -t focus-timer-dev)"
+APP_LOG="$ROOT/build/dev.log"
+TAIL_PID=""
+
+app_running() { pgrep -f "$BIN" >/dev/null; }
 
 stop_app() {
-  if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
-    kill "$PID" 2>/dev/null
-    wait "$PID" 2>/dev/null
-  fi
-  PID=""
+  pkill -f "$BIN" 2>/dev/null
+  for _ in $(seq 1 20); do app_running || return 0; sleep 0.1; done
+  pkill -9 -f "$BIN" 2>/dev/null
 }
-trap 'stop_app; rm -f "$LOG"; echo; echo "Stopped."; exit 0' INT TERM
+
+cleanup() {
+  stop_app
+  [ -n "$TAIL_PID" ] && kill "$TAIL_PID" 2>/dev/null
+  rm -f "$BUILD_LOG"
+  echo
+  echo "Stopped."
+  exit 0
+}
+trap cleanup INT TERM HUP
 
 # Changes whenever a file that shapes the build is edited, added or removed.
 fingerprint() {
@@ -32,22 +42,33 @@ fingerprint() {
 
 rebuild() {
   local started=$SECONDS
-  if FOCUS_TIMER_VARIANT=dev bash "$ROOT/scripts/build-app.sh" >"$LOG" 2>&1; then
+  if FOCUS_TIMER_VARIANT=dev bash "$ROOT/scripts/build-app.sh" >"$BUILD_LOG" 2>&1; then
     stop_app
-    "$BIN" &
-    PID=$!
-    echo "$(date +%H:%M:%S)  running ($((SECONDS - started))s build)"
+    # Through LaunchServices, not by running the binary: macOS only gives a
+    # menu bar item to an app it launched itself. The price is that the app
+    # isn't our child, so its output comes back through a log file.
+    if open -g --stdout "$APP_LOG" --stderr "$APP_LOG" "$APP"; then
+      echo "$(date +%H:%M:%S)  running ($((SECONDS - started))s build)"
+    else
+      echo "$(date +%H:%M:%S)  built, but macOS wouldn't launch it"
+    fi
   else
     # Just the compiler's file:line errors, once each; the tail if there are none.
-    grep -E "^error: /" "$LOG" | sed 's/: FixIt(.*//' | awk '!seen[$0]++'
-    grep -qE "^error: /" "$LOG" || tail -15 "$LOG"
+    grep -E "^error: /" "$BUILD_LOG" | sed 's/: FixIt(.*//' | awk '!seen[$0]++'
+    grep -qE "^error: /" "$BUILD_LOG" || tail -15 "$BUILD_LOG"
     echo "$(date +%H:%M:%S)  build failed; the last good build keeps running"
   fi
 }
 
 echo "Focus Timer Dev: watching $ROOT (Ctrl-C to stop)"
 # A copy left behind by an earlier run would make the new one quit on launch.
-pkill -f "$BIN" 2>/dev/null
+stop_app
+
+# Anything the app prints (a crash, an NSLog) shows up here.
+mkdir -p "$ROOT/build"
+: >"$APP_LOG"
+tail -n 0 -F "$APP_LOG" 2>/dev/null &
+TAIL_PID=$!
 
 last=""
 while true; do
