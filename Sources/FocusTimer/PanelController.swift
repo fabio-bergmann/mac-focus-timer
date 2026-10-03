@@ -36,7 +36,7 @@ final class LauncherPanel: NSPanel {
 }
 
 final class PanelController: NSObject, NSWindowDelegate {
-    static let size = NSSize(width: 520, height: 420)
+    static let size = NSSize(width: 750, height: 420)
     static let cornerRadius: CGFloat = 16
 
     private let panel: LauncherPanel
