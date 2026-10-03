@@ -3,6 +3,15 @@ import Combine
 import FocusTimerCore
 import ServiceManagement
 
+/// Which build this is. `scripts/dev.sh` runs a second copy beside the
+/// installed app, told apart by its bundle id.
+enum AppVariant {
+    static let isDev = Bundle.main.bundleIdentifier?.hasSuffix(".dev") == true
+    static let name = isDev ? "Focus Timer Dev" : "Focus Timer"
+    /// The dev build takes another shortcut, or the two would fight over one.
+    static let defaultHotKey: KeyCombo = isDev ? .controlOptionSpace : .optionSpace
+}
+
 final class AppSettings: ObservableObject {
     static let defaultPresets = ["5m", "15m", "25m", "30m", "45m", "1h", "1h 30m", "2h"]
     static let defaultBarColorHex = "#A855F7"
@@ -42,7 +51,7 @@ final class AppSettings: ObservableObject {
         barOpacity = defaults.object(forKey: Key.barOpacity) as? Double ?? 0.55
         displayStyle = defaults.string(forKey: Key.displayStyle).flatMap(DisplayStyle.init) ?? .compact
         soundEnabled = defaults.object(forKey: Key.sound) as? Bool ?? true
-        hotKey = defaults.data(forKey: Key.hotKey).flatMap { try? JSONDecoder().decode(KeyCombo.self, from: $0) } ?? .optionSpace
+        hotKey = defaults.data(forKey: Key.hotKey).flatMap { try? JSONDecoder().decode(KeyCombo.self, from: $0) } ?? AppVariant.defaultHotKey
     }
 
     /// The bar behind the time, with its transparency.

@@ -27,7 +27,7 @@ struct SettingsView: View {
                         .contentShape(Rectangle())
                     }
                     Spacer()
-                    Button("Quit Focus Timer") { NSApp.terminate(nil) }
+                    Button("Quit \(AppVariant.name)") { NSApp.terminate(nil) }
                 }
                 .buttonStyle(.plain)
                 .font(.system(size: 12))
@@ -220,7 +220,7 @@ struct SettingsView: View {
     private var shortcutSection: some View {
         section("Shortcut") {
             HStack(spacing: 10) {
-                Text("Open Focus Timer")
+                Text("Open \(AppVariant.name)")
                 Spacer()
                 ShortcutRecorder(settings: settings)
             }

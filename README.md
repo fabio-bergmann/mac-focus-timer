@@ -43,7 +43,15 @@ rebuilds from this checkout when there are new commits.
 ## Development
 
 ```sh
-swift build
+scripts/dev.sh
+```
+
+Leave that running in a terminal tab. It builds the working tree as
+"Focus Timer Dev" and relaunches it whenever a source file changes, beside the
+installed app: separate settings, ⌃⌥Space as its shortcut, and an orange dot
+on its menu bar item.
+
+```sh
 swift test
 swift run FocusTimer --render-previews /tmp/focus-timer-previews
 ```

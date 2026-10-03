@@ -9,15 +9,38 @@ a rounded rectangle with a translucent bar behind it that drains.
 
 - **`main` is the only branch.** Commit straight to `main`; there is no `dev`
   here. Still never create another branch or worktree without asking.
-- **A commit or push is not a release.** `scripts/release-local.sh` replaces
+- **Commit locally as you go; push only when Fabio says a version is ready.**
+  `origin/main` is what the installed app's Update button builds, so a push
+  publishes a version. Unpushed commits on `main` are the normal state.
+- **A commit or push is not an install.** `scripts/release-local.sh` replaces
   `/Applications/Focus Timer.app` and relaunches it. Run it only when Fabio asks
   for a release or install in so many words, each time.
+- **Releasing a version**, when asked: bump `CFBundleShortVersionString` in
+  `Support/Info.plist`, commit, push, then install (the Update button in
+  Settings, or `scripts/release-local.sh`).
 - **Don't put the panel on Fabio's screen to check a change.** Render it instead
   (see Previews).
+
+## The dev loop
+
+`scripts/dev.sh` is this project's localhost. Fabio leaves it running in a
+terminal tab: it builds the working tree, uncommitted edits included, as
+"Focus Timer Dev" and relaunches it within a few seconds of any change under
+`Sources/` or `Support/`.
+
+- Every file you save shows up in Fabio's menu bar almost at once, so a half-done
+  edit is visible too. A build that fails prints its errors in that terminal and
+  leaves the last good build running.
+- The dev build is a separate app: bundle id `dev.fabio.focustimer.dev`, its
+  own settings and timer, ⌃⌥Space instead of ⌥Space, and an orange dot on its
+  menu bar item. It never touches the installed app (`AppVariant` in
+  `AppSettings.swift` is where the two differ).
+- A running timer survives the relaunch, because it is stored on disk.
 
 ## Commands
 
 ```sh
+scripts/dev.sh                   # the dev loop above
 swift build                      # compile
 swift test                       # unit tests (FocusTimerCore)
 swift run FocusTimer --render-previews /tmp/focus-timer-previews

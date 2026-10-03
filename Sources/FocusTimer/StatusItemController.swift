@@ -62,7 +62,7 @@ final class StatusItemController: NSObject {
         guard next != drawn else { return }
         drawn = next
 
-        button.image = PillRenderer.image(for: content, bar: next.bar, darkMenuBar: dark)
+        button.image = PillRenderer.image(for: content, bar: next.bar, darkMenuBar: dark, devMarker: AppVariant.isDev)
         let description = accessibilityDescription
         button.toolTip = description
         button.setAccessibilityTitle(description)
@@ -72,7 +72,7 @@ final class StatusItemController: NSObject {
         let state = timer.state
         switch state.phase {
         case .idle:
-            return "Focus Timer"
+            return AppVariant.name
         case .running, .paused:
             let left = DurationFormat.spoken(Int((state.remaining(now: Date()) ?? 0).rounded(.up)))
             let label = state.label.map { "\($0): " } ?? ""
@@ -104,7 +104,7 @@ final class StatusItemController: NSObject {
         }
         menu.addItem(menuItem("Settings…", #selector(showSettings)))
         menu.addItem(.separator())
-        menu.addItem(menuItem("Quit Focus Timer", #selector(quit)))
+        menu.addItem(menuItem("Quit \(AppVariant.name)", #selector(quit)))
 
         // Attaching the menu only for this click keeps left-click free for the panel.
         item.menu = menu

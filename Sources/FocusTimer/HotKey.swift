@@ -8,6 +8,9 @@ struct KeyCombo: Equatable, Codable {
     var display: String
 
     static let optionSpace = KeyCombo(keyCode: UInt32(kVK_Space), modifiers: UInt32(optionKey), display: "⌥Space")
+    static let controlOptionSpace = KeyCombo(
+        keyCode: UInt32(kVK_Space), modifiers: UInt32(controlKey | optionKey), display: "⌃⌥Space"
+    )
 }
 
 extension KeyCombo {

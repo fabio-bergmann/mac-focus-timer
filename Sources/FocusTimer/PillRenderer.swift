@@ -10,7 +10,20 @@ enum PillRenderer {
 
     /// - Parameter bar: the bar colour, alpha included.
     /// - Parameter darkMenuBar: whether the menu bar wants light content.
-    static func image(for content: PillContent, bar: NSColor, darkMenuBar: Bool) -> NSImage {
+    /// - Parameter devMarker: adds an orange dot, so the dev build can be told
+    ///   from the installed one sitting next to it.
+    static func image(for content: PillContent, bar: NSColor, darkMenuBar: Bool, devMarker: Bool = false) -> NSImage {
+        let pill = pill(for: content, bar: bar, darkMenuBar: darkMenuBar)
+        guard devMarker else { return pill }
+        return NSImage(size: pill.size, flipped: false) { rect in
+            pill.draw(in: rect)
+            NSColor.systemOrange.setFill()
+            NSBezierPath(ovalIn: NSRect(x: rect.maxX - 5, y: rect.maxY - 5, width: 5, height: 5)).fill()
+            return true
+        }
+    }
+
+    private static func pill(for content: PillContent, bar: NSColor, darkMenuBar: Bool) -> NSImage {
         let foreground: NSColor = darkMenuBar ? .white : NSColor(white: 0, alpha: 0.85)
         let strength: CGFloat = content.dimmed ? 0.5 : 1
 
