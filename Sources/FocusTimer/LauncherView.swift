@@ -68,7 +68,7 @@ struct LauncherView: View {
 
                 Divider()
                 if timer.state.isActive {
-                    TimerStrip(state: timer.state, now: now, tint: Color(nsColor: settings.barColor.withAlphaComponent(1)))
+                    TimerStrip(state: timer.state, now: now, bar: Color(nsColor: settings.barColor))
                     Divider()
                 }
                 results(rows, selected: selected)
@@ -182,45 +182,53 @@ private struct RowView: View {
     }
 }
 
-/// The running timer, shown above the list.
+/// The running timer, shown above the list: the menu bar item at full size.
+/// Same outline, same bar behind the text in the colour and opacity chosen in
+/// Settings, draining the same way.
 private struct TimerStrip: View {
     let state: TimerState
     let now: Date
-    let tint: Color
+    /// The bar colour, opacity included.
+    let bar: Color
 
     var body: some View {
-        VStack(spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(DurationFormat.menuBar(state.remaining(now: now) ?? 0, style: .precise))
-                    .font(.system(size: 20, weight: .semibold))
-                    .monospacedDigit()
+        let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
+        // Paused dims everything, as it does in the menu bar.
+        let strength: Double = state.isPaused ? 0.5 : 1
+
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(DurationFormat.menuBar(state.remaining(now: now) ?? 0, style: .precise))
+                .font(.system(size: 20, weight: .semibold))
+                .monospacedDigit()
+            Group {
                 Text(state.isPaused ? "paused" : "left")
-                    .foregroundStyle(.secondary)
                 if let label = state.label {
                     Text("· \(label)")
-                        .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
                 Spacer()
                 if let end = state.endDate {
                     Text("ends \(end.formatted(date: .omitted, time: .shortened))")
                         .monospacedDigit()
-                        .foregroundStyle(.secondary)
                 }
             }
-            .font(.system(size: 13))
-
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.primary.opacity(0.1))
-                    Capsule().fill(tint.opacity(state.isPaused ? 0.5 : 1))
-                        .frame(width: geometry.size.width * state.fraction(now: now))
-                }
-            }
-            .frame(height: 4)
+            .opacity(0.7)
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 12)
+        .font(.system(size: 13, weight: .medium))
+        .foregroundStyle(Color.primary.opacity(strength))
+        .padding(.horizontal, 14)
+        .frame(height: 44)
+        .background(alignment: .leading) {
+            GeometryReader { geometry in
+                Rectangle()
+                    .fill(bar.opacity(state.isPaused ? 0.6 : 1))
+                    .frame(width: geometry.size.width * state.fraction(now: now))
+            }
+        }
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(Color.primary.opacity(0.9 * strength), lineWidth: 1.5))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
     }
 }
 

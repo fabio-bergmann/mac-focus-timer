@@ -11,7 +11,7 @@ final class TimerController: ObservableObject {
 
     var onFinish: ((_ seconds: Int, _ label: String?) -> Void)?
 
-    private static let stateKey = "timerState"
+    static let stateKey = "timerState"
     private let defaults: UserDefaults
     private var ticker: Timer?
     private var activity: NSObjectProtocol?

@@ -27,9 +27,14 @@ enum PreviewRenderer {
             model.query = "1"
             snapshot(model, dark: dark, to: directory.appendingPathComponent("panel-typing-\(suffix).png"))
             model.query = ""
-            timer.start(seconds: 25 * 60, label: "Write report")
-            snapshot(model, dark: dark, to: directory.appendingPathComponent("panel-running-\(suffix).png"))
-            timer.stop()
+            // A timer nine minutes in, so the bar shows its draining edge. Only a
+            // saved state can be backdated, so it goes in the way a relaunch finds it.
+            var underway = TimerState()
+            underway.start(seconds: 25 * 60, label: "Write report", now: Date().addingTimeInterval(-9 * 60))
+            defaults.set(try? JSONEncoder().encode(underway), forKey: TimerController.stateKey)
+            let running = LauncherModel(settings: settings, timer: TimerController(defaults: defaults), updates: UpdateService())
+            snapshot(running, dark: dark, to: directory.appendingPathComponent("panel-running-\(suffix).png"))
+            running.timer.stop()
             model.mode = .settings
             snapshot(model, dark: dark, to: directory.appendingPathComponent("panel-settings-\(suffix).png"))
             // The whole settings page, which scrolls inside the real panel.
