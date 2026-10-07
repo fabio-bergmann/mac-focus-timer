@@ -23,6 +23,7 @@ enum PreviewRenderer {
 
         for dark in [true, false] {
             let suffix = dark ? "dark" : "light"
+            write(dragTimer(style: settings.pillStyle, dark: dark), to: directory.appendingPathComponent("drag-timer-\(suffix).png"))
             let timer = TimerController(defaults: defaults)
             let model = LauncherModel(settings: settings, timer: timer, updates: UpdateService())
             timer.stop()
@@ -105,6 +106,36 @@ enum PreviewRenderer {
             NSRect(x: size.width / 2, y: 0, width: size.width / 2, height: size.height).fill()
             guard let context = NSGraphicsContext.current?.cgContext else { return }
             ScreenGlow.layer(size: size).render(in: context)
+        }
+    }
+
+    // MARK: - Pulling a timer out of the menu bar
+
+    /// Two pulls side by side on a stand-in screen: a short one with the
+    /// bubble on the left, and one at the left edge, where it moves right.
+    private static func dragTimer(style: PillStyle, dark: Bool) -> NSBitmapImageRep {
+        let size = NSSize(width: 1000, height: 560)
+        let menuBar: CGFloat = 24
+        let pill = PillRenderer.image(for: PillContent(text: nil), style: style, darkMenuBar: dark)
+        let pulls: [(item: CGFloat, pointer: CGPoint)] = [(820, CGPoint(x: 680, y: 340)), (300, CGPoint(x: 60, y: 120))]
+
+        return bitmap(width: size.width, height: size.height, scale: 2) {
+            guard let context = NSGraphicsContext.current?.cgContext else { return }
+            NSGradient(
+                starting: dark ? NSColor(srgbRed: 0.1, green: 0.16, blue: 0.24, alpha: 1) : NSColor(srgbRed: 0.75, green: 0.84, blue: 0.92, alpha: 1),
+                ending: dark ? NSColor(srgbRed: 0.05, green: 0.07, blue: 0.1, alpha: 1) : NSColor(white: 0.97, alpha: 1)
+            )?.draw(in: NSRect(origin: .zero, size: size), angle: -90)
+            (dark ? NSColor(white: 0, alpha: 0.3) : NSColor(white: 1, alpha: 0.5)).setFill()
+            NSRect(x: 0, y: size.height - menuBar, width: size.width, height: menuBar).fill()
+
+            for pull in pulls {
+                pill.draw(at: NSPoint(x: pull.item - pill.size.width / 2, y: size.height - (menuBar + pill.size.height) / 2), from: .zero, operation: .sourceOver, fraction: 1)
+                let anchor = CGPoint(x: pull.item, y: size.height - menuBar)
+                let seconds = DragDial.seconds(forDistance: hypot(pull.pointer.x - anchor.x, pull.pointer.y - anchor.y))
+                let scene = DragTimerScene(size: size, scale: 2, bar: style.bar, dark: dark)
+                scene.layout(anchor: anchor, pointer: pull.pointer, readout: seconds.map { DragTimerScene.Readout(seconds: $0, now: Date()) })
+                scene.root.render(in: context)
+            }
         }
     }
 

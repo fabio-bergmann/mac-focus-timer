@@ -2,18 +2,37 @@ import AppKit
 import Combine
 import FocusTimerCore
 
-/// The menu bar item. A click opens the panel under it; a right-click offers
-/// the few things worth reaching without the panel.
+/// The menu bar item. A click opens the panel; pulling the item down onto the
+/// screen sets a timer as long as the pull; a right-click offers the few
+/// things worth reaching without the panel.
 final class StatusItemController: NSObject {
     var onClick: (() -> Void)?
     var onShowSettings: (() -> Void)?
+    var onDragStart: (() -> Void)?
+    var willStartTimer: (() -> Void)?
 
     private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let settings: AppSettings
     private let timer: TimerController
+    private let overlay = DragTimerOverlay()
     private var subscriptions = Set<AnyCancellable>()
     private var appearanceObservation: NSKeyValueObservation?
+    private var pressMonitor: Any?
+    private var press: Press?
     private var drawn: Drawn?
+
+    /// A left press on the item, from the mouse-down until the button is up.
+    private struct Press {
+        let start: NSPoint
+        let follower: Timer
+        var isDrag = false
+        /// Where the pull was last drawn.
+        var pointer: NSPoint?
+        var seconds: Int?
+    }
+
+    /// How far the pointer moves before a press is a pull rather than a click.
+    private static let dragThreshold: CGFloat = 4
 
     /// Everything the image depends on, to skip redraws that change nothing.
     private struct Drawn: Equatable {
@@ -37,6 +56,18 @@ final class StatusItemController: NSObject {
             appearanceObservation = button.observe(\.effectiveAppearance) { [weak self] _, _ in
                 DispatchQueue.main.async { self?.render() }
             }
+        }
+        // A left press is taken before the button sees it, since the button
+        // would only ever report a click. Control and Command pass through:
+        // Control-click is the menu, Command-drag moves the item.
+        pressMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp]) { [weak self] event in
+            guard let self else { return event }
+            // The drags and the mouse-up of a press are the press's.
+            if press != nil { return nil }
+            guard event.type == .leftMouseDown, let window = item.button?.window, event.window === window,
+                  event.modifierFlags.isDisjoint(with: [.control, .command]) else { return event }
+            beginPress()
+            return nil
         }
 
         // objectWillChange fires before the new value lands, so draw on the next turn.
@@ -76,6 +107,59 @@ final class StatusItemController: NSObject {
             return state.label.map { "\($0): finished" } ?? "Timer finished"
         }
     }
+
+    // MARK: - Pressing and pulling
+
+    private func beginPress() {
+        // The pointer and the button are read on a timer rather than from the
+        // drag events. The press reaches the app through the menu bar, which
+        // this macOS draws in another process, so nothing promises the events
+        // that follow arrive the same way; and a press that missed its
+        // mouse-up would leave the overlay stuck on screen.
+        let follower = Timer(timeInterval: 1 / 120, repeats: true) { [weak self] _ in self?.followPress() }
+        RunLoop.main.add(follower, forMode: .common)
+        press = Press(start: NSEvent.mouseLocation, follower: follower)
+        item.button?.highlight(true)
+    }
+
+    private func followPress() {
+        guard var press else { return }
+        let pointer = NSEvent.mouseLocation
+        if !press.isDrag, hypot(pointer.x - press.start.x, pointer.y - press.start.y) > Self.dragThreshold {
+            press.isDrag = true
+            onDragStart?()
+            overlay.begin(at: press.start, bar: settings.barColor)
+        }
+        if press.isDrag, pointer != press.pointer {
+            press.pointer = pointer
+            let seconds = overlay.follow(pointer, now: Date())
+            // A tick on a Force Touch trackpad for each step of the dial.
+            if seconds != press.seconds, seconds != nil {
+                NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
+            }
+            press.seconds = seconds
+        }
+        self.press = press
+        if NSEvent.pressedMouseButtons & 1 == 0 { endPress() }
+    }
+
+    private func endPress() {
+        guard let press else { return }
+        self.press = nil
+        press.follower.invalidate()
+        item.button?.highlight(false)
+        guard press.isDrag else {
+            onClick?()
+            return
+        }
+        overlay.end()
+        // Letting go back at the menu bar sets nothing.
+        guard let seconds = press.seconds else { return }
+        willStartTimer?()
+        timer.start(seconds: seconds, label: nil)
+    }
+
+    // MARK: - Clicks and the menu
 
     @objc private func clicked() {
         let event = NSApp.currentEvent

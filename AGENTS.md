@@ -2,8 +2,10 @@
 
 A menu bar countdown timer for macOS. One global shortcut (⌥Space by default) or
 a click on the menu bar item opens a Spotlight-style panel: pick a preset or
-type a time ("34m", "1h30", "until 15:30"). The menu bar shows the time left in
-a rounded rectangle with a translucent bar behind it that drains.
+type a time ("34m", "1h30", "until 15:30"). Or press the menu bar item and pull
+it down onto the screen: the further the pull, the longer the timer, and
+letting go starts it in place of any running one. The menu bar shows the time
+left in a rounded rectangle with a translucent bar behind it that drains.
 
 ## Working agreement (overrides the global one for this repo)
 
@@ -58,11 +60,12 @@ scripts/release-local.sh [ref]   # build a committed ref, install, relaunch
 
 - `Sources/FocusTimerCore`: everything that can be tested without a screen. The
   text parser (`DurationParser`), what the panel lists for a query (`Launcher`),
-  the timer itself (`TimerState`), and the menu bar text (`PillContent`,
-  `DurationFormat`). Time is always passed in, never read from the clock.
+  the timer itself (`TimerState`), the menu bar text (`PillContent`,
+  `DurationFormat`), and how long a pull from the menu bar is (`DragDial`).
+  Time is always passed in, never read from the clock.
 - `Sources/FocusTimer`: the AppKit and SwiftUI shell. `StatusItemController` and
-  `PillRenderer` draw the menu bar item, `PanelController` owns the floating
-  panel, `LauncherView` and `SettingsView` are its two pages, `HotKey` is the
+  `PillRenderer` draw the menu bar item, `DragTimerOverlay` draws a pull from
+  it, `PanelController` owns the floating panel, `LauncherView` and `SettingsView` are its two pages, `HotKey` is the
   Carbon global shortcut, `UpdateService` is the Update button.
 - `Support/Info.plist`: the bundle's plist. The version lives here.
 - `scripts/`: building and releasing.
@@ -91,6 +94,13 @@ scripts/release-local.sh [ref]   # build a committed ref, install, relaunch
   shortcut or a click on the menu bar item. Fabio asked for that; it also
   sidesteps the status item's window reporting an empty frame now that macOS
   draws the menu bar out of process.
+- **A left press on the menu bar item is the app's, not the button's.** The
+  button only ever reports a click, so a local event monitor takes the
+  mouse-down first, and the press is then followed by reading the pointer and
+  the mouse button on a timer, not from drag events: with the menu bar drawn
+  out of process, nothing promises those reach the app, and a missed mouse-up
+  would leave the overlay stuck. A press that moves under 4 points is a click.
+  Control-click (the menu) and Command-drag go to the button as before.
 - **Icons are Hugeicons Pro, stroke rounded**, the set CoWork uses. The package
   is JavaScript, so the path data of each icon is copied into
   `FocusTimerCore/Icon.swift` and drawn by `IconView`; that file says how to add
@@ -101,7 +111,8 @@ scripts/release-local.sh [ref]   # build a committed ref, install, relaunch
 
 ## Previews
 
-`--render-previews <dir>` writes PNGs of the menu bar item in every state and
-of the panel's pages, light and dark, without opening a window. Read those to
+`--render-previews <dir>` writes PNGs of the menu bar item in every state, of
+the panel's pages and of a pull from the menu bar, light and dark, without
+opening a window. Read those to
 check a UI change. What they can't show is behaviour: focus, keyboard handling,
 click-away and the real menu bar need the installed app.

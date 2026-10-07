@@ -27,6 +27,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let statusItem = StatusItemController(settings: settings, timer: timer)
         statusItem.onClick = { panel.toggle(fromMenuBar: true) }
         statusItem.onShowSettings = { panel.show(settings: true) }
+        statusItem.onDragStart = { panel.hide() }
+        statusItem.willStartTimer = { [notifier] in notifier.requestAuthorization() }
         self.statusItem = statusItem
 
         hotKey.onPress = { panel.toggle() }
