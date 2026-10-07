@@ -24,10 +24,13 @@ final class StatusItemController: NSObject {
     /// A left press on the item, from the mouse-down until the button is up.
     private struct Press {
         let start: NSPoint
+        /// The item on screen, when the press could tell.
+        let item: NSRect?
         let follower: Timer
         var isDrag = false
-        /// Where the pull was last drawn.
+        /// Where the pull was last drawn, and in which steps.
         var pointer: NSPoint?
+        var step = 1
         var seconds: Int?
     }
 
@@ -66,7 +69,7 @@ final class StatusItemController: NSObject {
             if press != nil { return nil }
             guard event.type == .leftMouseDown, let window = item.button?.window, event.window === window,
                   event.modifierFlags.isDisjoint(with: [.control, .command]) else { return event }
-            beginPress()
+            beginPress(itemFrame: itemFrame)
             return nil
         }
 
@@ -110,7 +113,18 @@ final class StatusItemController: NSObject {
 
     // MARK: - Pressing and pulling
 
-    private func beginPress() {
+    /// The item's frame on screen, while its window knows where it is: the
+    /// press can't tell, since it arrives at the middle of that window
+    /// whichever spot was pressed, and the window's frame has been reported
+    /// empty, so it only counts when it holds the pointer.
+    private var itemFrame: NSRect? {
+        guard let button = item.button, let window = button.window,
+              window.frame.insetBy(dx: -1, dy: -1).contains(NSEvent.mouseLocation) else { return nil }
+        let frame = window.convertToScreen(button.convert(button.bounds, to: nil))
+        return frame.isEmpty ? nil : frame
+    }
+
+    private func beginPress(itemFrame: NSRect?) {
         // The pointer and the button are read on a timer rather than from the
         // drag events. The press reaches the app through the menu bar, which
         // this macOS draws in another process, so nothing promises the events
@@ -118,7 +132,7 @@ final class StatusItemController: NSObject {
         // mouse-up would leave the overlay stuck on screen.
         let follower = Timer(timeInterval: 1 / 120, repeats: true) { [weak self] _ in self?.followPress() }
         RunLoop.main.add(follower, forMode: .common)
-        press = Press(start: NSEvent.mouseLocation, follower: follower)
+        press = Press(start: NSEvent.mouseLocation, item: itemFrame, follower: follower)
         item.button?.highlight(true)
     }
 
@@ -128,11 +142,14 @@ final class StatusItemController: NSObject {
         if !press.isDrag, hypot(pointer.x - press.start.x, pointer.y - press.start.y) > Self.dragThreshold {
             press.isDrag = true
             onDragStart?()
-            overlay.begin(at: press.start, bar: settings.barColor)
+            overlay.begin(at: press.start, item: press.item, bar: settings.barColor)
         }
-        if press.isDrag, pointer != press.pointer {
+        // Shift snaps to quarter hours.
+        let step = NSEvent.modifierFlags.contains(.shift) ? DragDial.coarseStep : 1
+        if press.isDrag, pointer != press.pointer || step != press.step {
             press.pointer = pointer
-            let seconds = overlay.follow(pointer, now: Date())
+            press.step = step
+            let seconds = overlay.follow(pointer, step: step, now: Date())
             // A tick on a Force Touch trackpad for each step of the dial.
             if seconds != press.seconds, seconds != nil {
                 NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)

@@ -130,7 +130,9 @@ enum PreviewRenderer {
 
             for pull in pulls {
                 pill.draw(at: NSPoint(x: pull.item - pill.size.width / 2, y: size.height - (menuBar + pill.size.height) / 2), from: .zero, operation: .sourceOver, fraction: 1)
-                let anchor = CGPoint(x: pull.item, y: size.height - menuBar)
+                // The button around the pill, as the menu bar sizes it.
+                let button = NSRect(x: pull.item - pill.size.width / 2 - 6, y: size.height - menuBar + 1, width: pill.size.width + 12, height: menuBar - 2)
+                let anchor = DragDial.exit(from: button, toward: pull.pointer) ?? pull.pointer
                 let seconds = DragDial.seconds(forDistance: hypot(pull.pointer.x - anchor.x, pull.pointer.y - anchor.y))
                 let scene = DragTimerScene(size: size, scale: 2, bar: style.bar, dark: dark)
                 scene.layout(anchor: anchor, pointer: pull.pointer, readout: seconds.map { DragTimerScene.Readout(seconds: $0, now: Date()) })

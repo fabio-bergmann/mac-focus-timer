@@ -100,7 +100,9 @@ scripts/release-local.sh [ref]   # build a committed ref, install, relaunch
   the mouse button on a timer, not from drag events: with the menu bar drawn
   out of process, nothing promises those reach the app, and a missed mouse-up
   would leave the overlay stuck. A press that moves under 4 points is a click.
-  Control-click (the menu) and Command-drag go to the button as before.
+  Control-click (the menu) and Command-drag go to the button as before. The
+  line aims at the middle of the item, taken from its window's frame: the
+  press itself always lands in the middle of that window, wherever it was.
 - **Icons are Hugeicons Pro, stroke rounded**, the set CoWork uses. The package
   is JavaScript, so the path data of each icon is copied into
   `FocusTimerCore/Icon.swift` and drawn by `IconView`; that file says how to add

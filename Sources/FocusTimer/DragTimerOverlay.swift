@@ -2,24 +2,31 @@ import AppKit
 import FocusTimerCore
 
 /// What shows while the menu bar item is pulled down onto the screen: a line
-/// hanging from the menu bar to the pointer, the item's square under the
-/// pointer, and beside it the timer that letting go would start. Like the
-/// glow, it sits above everything and takes neither clicks nor focus.
+/// from the item to the pointer, the item's square under the pointer, and
+/// beside it the timer that letting go would start. Like the glow, it sits
+/// above everything and takes neither clicks nor focus.
 final class DragTimerOverlay {
     private var window: NSWindow?
     private var scene: DragTimerScene?
-    /// Where the line hangs from, in screen coordinates.
-    private var anchor = NSPoint.zero
+    /// The menu bar item, in screen coordinates. The line points at its
+    /// middle but only shows outside it.
+    private var item = NSRect.zero
 
     /// Starts a pull that began at `start`, a point on the menu bar item.
-    func begin(at start: NSPoint, bar: NSColor) {
+    /// Without the item's frame, the line hangs from the bottom of the menu
+    /// bar under `start`.
+    func begin(at start: NSPoint, item: NSRect?, bar: NSColor) {
         end()
         guard let screen = NSScreen.screens.first(where: { NSMouseInRect(start, $0.frame, false) }) ?? NSScreen.main else { return }
         let frame = screen.frame
-        // The bottom of the menu bar, under the press. A menu bar that hides
-        // itself takes no room from the visible frame.
-        let menuBar = frame.maxY - screen.visibleFrame.maxY
-        anchor = NSPoint(x: start.x, y: min(start.y, frame.maxY - (menuBar > 0 ? menuBar : NSStatusBar.system.thickness)))
+        if let item {
+            self.item = item
+        } else {
+            // A menu bar that hides itself takes no room from the visible frame.
+            let menuBar = frame.maxY - screen.visibleFrame.maxY
+            let bottom = frame.maxY - (menuBar > 0 ? menuBar : NSStatusBar.system.thickness)
+            self.item = NSRect(x: start.x, y: min(start.y, bottom), width: 0, height: 0)
+        }
 
         let window = NSPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         window.level = .screenSaver
@@ -45,16 +52,17 @@ final class DragTimerOverlay {
     }
 
     /// Moves the pull to `pointer` and returns the timer, in seconds, that
-    /// letting go there would start, or nil for none.
+    /// letting go there would start, in steps of `step` minutes, or nil for none.
     @discardableResult
-    func follow(_ pointer: NSPoint, now: Date) -> Int? {
+    func follow(_ pointer: NSPoint, step: Int, now: Date) -> Int? {
         guard let window, let scene else { return nil }
         let frame = window.frame
         // Off this screen, the knob waits at its edge.
         let point = NSPoint(x: min(max(pointer.x, frame.minX), frame.maxX), y: min(max(pointer.y, frame.minY), frame.maxY))
-        let seconds = DragDial.seconds(forDistance: hypot(point.x - anchor.x, point.y - anchor.y))
+        let exit = DragDial.exit(from: item, toward: point) ?? point
+        let seconds = DragDial.seconds(forDistance: hypot(point.x - exit.x, point.y - exit.y), step: step)
         scene.layout(
-            anchor: NSPoint(x: anchor.x - frame.minX, y: anchor.y - frame.minY),
+            anchor: NSPoint(x: exit.x - frame.minX, y: exit.y - frame.minY),
             pointer: NSPoint(x: point.x - frame.minX, y: point.y - frame.minY),
             readout: seconds.map { DragTimerScene.Readout(seconds: $0, now: now) }
         )
