@@ -30,7 +30,7 @@ final class DragDialTests: XCTestCase {
         XCTAssertEqual(reached, Array(1...720))
     }
 
-    func testShiftSetsQuarterHours() {
+    func testCommandSetsQuarterHours() {
         XCTAssertEqual(DragDial.seconds(forDistance: DragDial.deadZone, step: DragDial.coarseStep), 15 * 60)
         let reached = Set(pulls(step: DragDial.coarseStep).compactMap { $0 }).map { $0 / 60 }.sorted()
         XCTAssertEqual(reached, Array(stride(from: 15, through: 720, by: 15)))

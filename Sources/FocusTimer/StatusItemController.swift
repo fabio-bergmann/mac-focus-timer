@@ -144,8 +144,9 @@ final class StatusItemController: NSObject {
             onDragStart?()
             overlay.begin(at: press.start, item: press.item, bar: settings.barColor)
         }
-        // Shift snaps to quarter hours.
-        let step = NSEvent.modifierFlags.contains(.shift) ? DragDial.coarseStep : 1
+        // Command, held once the press has begun, snaps to quarter hours.
+        // Held from the start, the press is the system's, to move the item.
+        let step = NSEvent.modifierFlags.contains(.command) ? DragDial.coarseStep : 1
         if press.isDrag, pointer != press.pointer || step != press.step {
             press.pointer = pointer
             press.step = step
