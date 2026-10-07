@@ -2,7 +2,7 @@ import CoreGraphics
 import Foundation
 
 /// Turns how far the menu bar item has been pulled onto the screen into a
-/// timer length, in whole minutes, or in quarter hours while Command is held.
+/// timer length, in whole minutes, or in quarter hours while Shift is held.
 /// The length grows faster the further the pull goes, so short lengths are
 /// the easiest to set exactly.
 public enum DragDial {
@@ -16,7 +16,7 @@ public enum DragDial {
     /// Above 1, so short pulls change the length slowly and long ones quickly.
     static let curve = 1.6
     public static let longest = 12 * 3600
-    /// The step, in minutes, while Command is held.
+    /// The step, in minutes, while Shift is held.
     public static let coarseStep = 15
 
     /// Where a line from the middle of `item` to `point` leaves it, which is
