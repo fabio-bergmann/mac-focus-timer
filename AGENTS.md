@@ -12,7 +12,8 @@ left in a rounded rectangle with a translucent bar behind it that drains.
 - **`main` is the only branch.** Commit straight to `main`; there is no `dev`
   here. Still never create another branch or worktree without asking.
 - **Commit locally as you go; push only when Fabio says a version is ready.**
-  `origin/main` is what the installed app's Update button builds, so a push
+  The repo is public and MIT-licensed, and `origin/main` is what every
+  installed copy's Update button builds, Fabio's and other people's, so a push
   publishes a version. Unpushed commits on `main` are the normal state.
 - **A commit or push is not an install.** `scripts/release-local.sh` replaces
   `/Applications/Focus Timer.app` and relaunches it. Run it only when Fabio asks
@@ -103,11 +104,12 @@ scripts/release-local.sh [ref]   # build a committed ref, install, relaunch
   Control-click (the menu) and Command-drag go to the button as before. The
   line aims at the middle of the item, taken from its window's frame: the
   press itself always lands in the middle of that window, wherever it was.
-- **Icons are Hugeicons Pro, stroke rounded**, the set CoWork uses. The package
-  is JavaScript, so the path data of each icon is copied into
+- **Icons are Hugeicons, stroke rounded, from the free set**
+  (`@hugeicons/core-free-icons`, MIT, credited in `THIRD-PARTY-NOTICES.md`).
+  The package is JavaScript, so the path data of each icon is copied into
   `FocusTimerCore/Icon.swift` and drawn by `IconView`; that file says how to add
-  one. Don't reach for SF Symbols. The icons are licensed, so the repo stays
-  private.
+  one. Don't reach for SF Symbols. Never copy in a Hugeicons Pro icon: the repo
+  is public, and the Pro licence forbids publishing them.
 - **The app icon is drawn in code** (`PreviewRenderer.drawIcon`) and rendered
   into the bundle at build time.
 
@@ -118,3 +120,7 @@ the panel's pages and of a pull from the menu bar, light and dark, without
 opening a window. Read those to
 check a UI change. What they can't show is behaviour: focus, keyboard handling,
 click-away and the real menu bar need the installed app.
+
+The README's pictures in `docs/images/` are those previews, copied over:
+`panel-on-page-*` as `panel-*`, `menu-bar`, and `drag-timer-*` as `pull-*`.
+When a change alters what one of them shows, render and copy it again.

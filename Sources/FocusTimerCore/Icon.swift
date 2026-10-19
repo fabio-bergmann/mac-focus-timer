@@ -1,13 +1,13 @@
 import Foundation
 
-/// The app's icons: Hugeicons Pro in the stroke rounded style, the set CoWork
-/// uses. Each is the path data of the icon's SVG on a 24 by 24 grid, drawn as
-/// 1.5-wide strokes with round caps and joins.
+/// The app's icons: Hugeicons in the stroke rounded style, from the free set
+/// (MIT, see THIRD-PARTY-NOTICES.md). Each is the path data of the icon's SVG
+/// on a 24 by 24 grid, drawn as 1.5-wide strokes with round caps and joins.
 ///
 /// To add one, copy the `d` strings from
-/// ~/Dev/cowork/node_modules/@hugeicons-pro/core-stroke-rounded/dist/esm/<Name>Icon.js
-/// (4.3.0 here). The Pro icons are licensed, so this file is one reason the
-/// repo stays private.
+/// package/dist/esm/<Name>Icon.js in what `npm pack @hugeicons/core-free-icons`
+/// downloads (4.3.5 here). Only the free set: the repo is public, and the
+/// Hugeicons Pro licence forbids publishing Pro icons.
 public enum Icon: CaseIterable, Sendable {
     case timer
     case play
