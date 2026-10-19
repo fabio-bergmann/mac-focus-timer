@@ -19,7 +19,9 @@ online is when you check for updates.
 You need macOS 14 (Sonoma) or later, and Xcode.
 
 1. Install [Xcode](https://apps.apple.com/app/xcode/id497799835) from the App
-   Store and open it once, so it finishes setting up.
+   Store and open it once, so it finishes setting up. If the App Store says
+   your macOS is too old for it, older versions of Xcode are at
+   [developer.apple.com/download/all](https://developer.apple.com/download/all/).
 2. In Terminal, run:
 
    ```sh
